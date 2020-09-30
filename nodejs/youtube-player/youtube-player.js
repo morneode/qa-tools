@@ -1,6 +1,16 @@
 const { By, firefoxDriver } = require('../common/selenium');
 const { sleep } = require('../common/sleep');
 
+const videoAndLength = (videoURL, videoLength) => {
+  return { videoURL: videoURL, videoLength: videoLength };
+};
+
+const videosToWatchWithFirefox = [
+  videoAndLength('https://www.youtube.com/watch?v=FzlxoVc3QVU', 20),
+  videoAndLength('https://www.youtube.com/watch?v=yQSJ-xBUSEk', 20),
+  videoAndLength('https://www.youtube.com/watch?v=WV99WRKhAik', 20)
+];
+
 async function playLatestVideo(channelToWatch) {
   let driver = await firefoxDriver();
   // let driver = await new Builder().forBrowser("chrome").build();
@@ -30,15 +40,15 @@ async function playLatestVideo(channelToWatch) {
     // await driver.quit().then(() => console.log('Closed webdriver'));
   }
 }
-playLatestVideo('https://www.youtube.com/c/LinusTechTips/videos');
+// playLatestVideo('https://www.youtube.com/c/LinusTechTips/videos');
 // playLatestVideo('https://www.youtube.com/c/jacksepticeye/videos');
 // playLatestVideo('https://www.youtube.com/user/enricood/videos');
 
-async function playVideo(videoToWatch) {
-  let driver = await firefoxDriver();
+async function playVideoWithDriver(driver, videoToWatch) {
+  // let driver = await firefoxDriver();
   // let driver = await new Builder().forBrowser("chrome").build();
   try {
-    await driver.get(videoToWatch);
+    await driver.get(videoToWatch.videoURL);
     await sleep(2000).then(() => console.log('Waiting...'));
 
     //https://stackoverflow.com/questions/39392479/how-to-mute-all-sounds-in-chrome-webdriver-with-selenium
@@ -48,12 +58,30 @@ async function playVideo(videoToWatch) {
 
     const video = await driver.findElement(By.css('body'));
     video.sendKeys('m');
-    await sleep(30000).then(() => console.log('Waiting...'));
-    video.sendKeys('>>>>');
+    // await sleep(30000).then(() => console.log('Waiting...'));
+    // video.sendKeys('>>>>');
+    await sleep(video.videoLength * 1000).then(() =>
+      console.log('Going to next video')
+    );
     // pause and resume every 10% of total time
   } finally {
     // await driver.quit().then(() => console.log('Closed webdriver'));
   }
+  return Promise.resolve(0);
 }
+
+async function playListOfVideosWithFirefox(videos) {
+  const driver = await firefoxDriver();
+
+  // videos.forEach(element => {
+  for (let i = 0; i < videos.length; i++) {
+    let video = videos[i];
+    console.log('Playing:', video.videoURL, video.videoLength);
+    await playVideoWithDriver(driver, video).then(value =>
+      console.log('The value is ', value)
+    );
+  }
+}
+playListOfVideosWithFirefox(videosToWatchWithFirefox);
 
 console.log('DONE...');
