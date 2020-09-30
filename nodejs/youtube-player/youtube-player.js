@@ -1,7 +1,7 @@
 const { By, firefoxDriver } = require('../common/selenium');
 const { sleep } = require('../common/sleep');
 
-async function watchVideo(channelToWatch) {
+async function playLatestVideo(channelToWatch) {
   let driver = await firefoxDriver();
   // let driver = await new Builder().forBrowser("chrome").build();
   try {
@@ -15,23 +15,17 @@ async function watchVideo(channelToWatch) {
       )
       .click();
     await sleep(2000).then(() => console.log('Waiting...'));
-    // await driver.getTitle().then(function(title) {
-    //   console.log('The title is: ' + title);
-    // });
-    // await sleep(2000).then(() => console.log('Waiting...'));
-    // await driver
-    //   .findElement(By.name('q'))
-    //   .sendKeys('webdriver', Key.RETURN)
-    //   .then(() => console.log('Search query entered..'));
-    // await sleep(2000).then(() => console.log('Waiting...'));
-    // await driver
-    //   .wait(until.titleIs('webdriver - Google Search'), 10000)
-    //   .then(() => console.log('The title is correct'));
-    // await sleep(5000).then(() => console.log('Waiting...'));
+
+    // const video = driver.findElement(By.tagName('video'));
+    // driver.executeScript('arguments[0].muted = true;', video);
+    const video = await driver.findElement(By.css('body'));
+    video.sendKeys('m');
+    await sleep(30000).then(() => console.log('Waiting...'));
+    video.sendKeys('>>>>');
   } finally {
     // await driver.quit().then(() => console.log('Closed webdriver'));
   }
 }
-// watchVideo('https://www.youtube.com/c/LinusTechTips/videos');
-watchVideo('https://www.youtube.com/c/jacksepticeye/videos');
+playLatestVideo('https://www.youtube.com/c/LinusTechTips/videos');
+// playLatestVideo('https://www.youtube.com/c/jacksepticeye/videos');
 console.log('DONE...');
