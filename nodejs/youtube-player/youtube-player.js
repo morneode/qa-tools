@@ -16,16 +16,44 @@ async function playLatestVideo(channelToWatch) {
       .click();
     await sleep(2000).then(() => console.log('Waiting...'));
 
-    // const video = driver.findElement(By.tagName('video'));
-    // driver.executeScript('arguments[0].muted = true;', video);
+    //https://stackoverflow.com/questions/39392479/how-to-mute-all-sounds-in-chrome-webdriver-with-selenium
+    //https://stackoverflow.com/questions/19103635/executing-commands-using-selenium-webdriver-in-node-javascript
+    //https://www.browserstack.com/docs/automate/selenium/getting-started/nodejs
+    //https://stackoverflow.com/questions/15596753/how-do-i-get-video-durations-with-youtube-api-version-3
+
     const video = await driver.findElement(By.css('body'));
     video.sendKeys('m');
     await sleep(30000).then(() => console.log('Waiting...'));
     video.sendKeys('>>>>');
+    // pause and resume every 10% of total time
   } finally {
     // await driver.quit().then(() => console.log('Closed webdriver'));
   }
 }
 playLatestVideo('https://www.youtube.com/c/LinusTechTips/videos');
 // playLatestVideo('https://www.youtube.com/c/jacksepticeye/videos');
+// playLatestVideo('https://www.youtube.com/user/enricood/videos');
+
+async function playVideo(videoToWatch) {
+  let driver = await firefoxDriver();
+  // let driver = await new Builder().forBrowser("chrome").build();
+  try {
+    await driver.get(videoToWatch);
+    await sleep(2000).then(() => console.log('Waiting...'));
+
+    //https://stackoverflow.com/questions/39392479/how-to-mute-all-sounds-in-chrome-webdriver-with-selenium
+    //https://stackoverflow.com/questions/19103635/executing-commands-using-selenium-webdriver-in-node-javascript
+    //https://www.browserstack.com/docs/automate/selenium/getting-started/nodejs
+    //https://stackoverflow.com/questions/15596753/how-do-i-get-video-durations-with-youtube-api-version-3
+
+    const video = await driver.findElement(By.css('body'));
+    video.sendKeys('m');
+    await sleep(30000).then(() => console.log('Waiting...'));
+    video.sendKeys('>>>>');
+    // pause and resume every 10% of total time
+  } finally {
+    // await driver.quit().then(() => console.log('Closed webdriver'));
+  }
+}
+
 console.log('DONE...');
