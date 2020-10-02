@@ -6,22 +6,49 @@ const {
   until
 } = require('../common/selenium');
 const { sleep } = require('../common/sleep');
+const { convertTimeToSeconds } = require('../common/time');
 
 const videoAndLength = (videoURL, videoLengthInSeconds) => {
   return { videoURL: videoURL, videoLength: videoLengthInSeconds };
 };
 
 const videosToWatch = [
-  videoAndLength('https://www.youtube.com/watch?v=FzlxoVc3QVU', 20),
-  videoAndLength('https://www.youtube.com/watch?v=yQSJ-xBUSEk', 20),
-  videoAndLength('https://www.youtube.com/watch?v=WV99WRKhAik', 20)
+  videoAndLength(
+    'https://www.youtube.com/watch?v=FzlxoVc3QVU',
+    convertTimeToSeconds('50:45')
+  ),
+  videoAndLength(
+    'https://www.youtube.com/watch?v=yQSJ-xBUSEk',
+    convertTimeToSeconds('1:42')
+  ),
+  videoAndLength(
+    'https://www.youtube.com/watch?v=WV99WRKhAik',
+    convertTimeToSeconds('17:07')
+  )
 ];
 
+const formatDate = () => {
+  let current_datetime = new Date();
+  let formatted_date =
+    current_datetime.getFullYear() +
+    '-' +
+    (current_datetime.getMonth() + 1) +
+    '-' +
+    current_datetime.getDate() +
+    ' ' +
+    current_datetime.getHours() +
+    ':' +
+    current_datetime.getMinutes() +
+    ':' +
+    current_datetime.getSeconds();
+  return formatted_date;
+};
+
 const infoLog = msg => {
-  console.log(`INFO: ${new Date()} ${msg}`);
+  console.log(`INFO: ${formatDate()} ${msg}`);
 };
 const errorLog = msg => {
-  console.error(`ERROR: ${new Date()} ${msg}`);
+  console.error(`ERROR: ${formatDate()} ${msg}`);
 };
 
 async function playLatestVideo(channelToWatch) {
@@ -57,7 +84,27 @@ async function playLatestVideo(channelToWatch) {
 // playLatestVideo('https://www.youtube.com/c/jacksepticeye/videos');
 // playLatestVideo('https://www.youtube.com/user/enricood/videos');
 
-async function playVideoWithDriver(driver, videoToWatch, positionInList) {
+const getCurrentVideoLength = async driver => {
+  let videoTimeInSeconds = 10;
+  try {
+    // const script = "alert('Alert via selenium')";
+    const script = `
+    var videoLength = document.querySelector('.ytp-time-duration').innerHTML;
+    return videoLength`;
+    // `alert();
+    //   $('.ytp-time-duration').innerHTML;"`
+    videoTimeInSeconds = await driver
+      .executeScript(script)
+      .then(function(return_value) {
+        return convertTimeToSeconds(return_value);
+      });
+  } catch (error) {
+    errorLog('Could not run script', error);
+  }
+  return Promise.resolve(videoTimeInSeconds);
+};
+
+async function playVideoWithDriver(name, driver, videoToWatch, positionInList) {
   try {
     await driver.get(videoToWatch.videoURL);
 
@@ -72,14 +119,48 @@ async function playVideoWithDriver(driver, videoToWatch, positionInList) {
     //https://www.browserstack.com/docs/automate/selenium/getting-started/nodejs
     //https://stackoverflow.com/questions/15596753/how-do-i-get-video-durations-with-youtube-api-version-3
 
-    const video = await driver.findElement(By.css('body'));
-    if (positionInList === 0) video.sendKeys('m');
+    let video = await driver.findElement(By.css('body'));
+    if (positionInList === 0) {
+      video.sendKeys('m');
+      video.sendKeys(' ');
+    }
+
+    let countAdCheck = 0;
+    let currentVideoLength = await getCurrentVideoLength(driver);
+    while (currentVideoLength !== videoToWatch.videoLength) {
+      if (countAdCheck % 10 === 0)
+        infoLog(
+          `${name}: Ad is playing, ${currentVideoLength} vs ${videoToWatch.videoLength}`
+        );
+      countAdCheck++;
+      await driver.sleep(1000);
+      currentVideoLength = await getCurrentVideoLength(driver);
+    }
+
+    const timesToPause = 3;
+    // const videoLength =
     // await sleep(30000).then(() => console.log('Waiting...'));
     // video.sendKeys('>>>>');
-    infoLog('videoToWatch.videoLength:', videoToWatch.videoLength * 1000);
-    await sleep(videoToWatch.videoLength * 1000).then(() =>
-      infoLog('Going to next video')
-    );
+
+    // let videoTimeInSeconds = getCurrentVideoLength(driver);
+    // const pauseResumeTime = Math.floor((videoTimeInSeconds * 1000) / 3);
+    // const pauseResumeTime = 40;
+    const pauseResumeTime = Math.floor(videoToWatch.videoLength / timesToPause);
+    infoLog(`Will pause/resume every ${pauseResumeTime}s`);
+    for (i = 0; i < timesToPause; i++) {
+      try {
+        await sleep(pauseResumeTime * 1000);
+        infoLog(`${name}: pausing`);
+        video.sendKeys(' ');
+        await driver.sleep(1000);
+        infoLog(`${name}: playing`);
+        video.sendKeys(' ');
+      } catch (error) {
+        errorLog(error);
+      }
+    }
+
+    infoLog('Going to next video');
     // pause and resume every 10% of total time
   } finally {
     // await driver.quit().then(() => console.log('Closed webdriver'));
@@ -101,7 +182,7 @@ async function playListOfVideosWithDriver(name, driverToUse, videosToPlay) {
       // await playVideoWithDriver(driver, video).then(value =>
       //   console.log('The value is ', value)
       // );
-      await playVideoWithDriver(driver, video, i);
+      await playVideoWithDriver(name, driver, video, i);
     }
   } catch (error) {
     errorLog(`Using ${name} got the following `, error);
@@ -111,6 +192,6 @@ async function playListOfVideosWithDriver(name, driverToUse, videosToPlay) {
 
 infoLog('Starting Up');
 playListOfVideosWithDriver('FireFox', firefoxDriver, videosToWatch);
-playListOfVideosWithDriver('Chrome', chromeDriver, videosToWatch);
+// playListOfVideosWithDriver('Chrome', chromeDriver, videosToWatch);
 // playListOfVideosWithDriver('Safari', safariDriver, videosToWatch);
 infoLog('Exitting');
