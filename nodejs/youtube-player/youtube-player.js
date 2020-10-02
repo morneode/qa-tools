@@ -1,15 +1,28 @@
-const { By, firefoxDriver } = require('../common/selenium');
+const {
+  By,
+  firefoxDriver,
+  chromeDriver,
+  safariDriver,
+  until
+} = require('../common/selenium');
 const { sleep } = require('../common/sleep');
 
-const videoAndLength = (videoURL, videoLength) => {
-  return { videoURL: videoURL, videoLength: videoLength };
+const videoAndLength = (videoURL, videoLengthInSeconds) => {
+  return { videoURL: videoURL, videoLength: videoLengthInSeconds };
 };
 
-const videosToWatchWithFirefox = [
+const videosToWatch = [
   videoAndLength('https://www.youtube.com/watch?v=FzlxoVc3QVU', 20),
   videoAndLength('https://www.youtube.com/watch?v=yQSJ-xBUSEk', 20),
   videoAndLength('https://www.youtube.com/watch?v=WV99WRKhAik', 20)
 ];
+
+const infoLog = msg => {
+  console.log(`INFO: ${new Date()} ${msg}`);
+};
+const errorLog = msg => {
+  console.error(`ERROR: ${new Date()} ${msg}`);
+};
 
 async function playLatestVideo(channelToWatch) {
   let driver = await firefoxDriver();
@@ -49,9 +62,16 @@ async function playLatestVideo(channelToWatch) {
 async function playVideoWithDriver(driver, videoToWatch, positionInList) {
   try {
     await driver.get(videoToWatch.videoURL);
-    await sleep(2000, 'Going to load the video').then(() =>
-      console.log(new Date(), ' Loading video...')
-    );
+
+    infoLog('waiting to load');
+    await driver.wait(until.elementLocated(By.css('body')));
+    infoLog('Loaded');
+    await driver.sleep(1000);
+    infoLog('Sleep for 1s');
+
+    // await sleep(2000, 'Going to load the video').then(() =>
+    //   console.log(new Date(), ' Loading video...')
+    // );
 
     //https://stackoverflow.com/questions/39392479/how-to-mute-all-sounds-in-chrome-webdriver-with-selenium
     //https://stackoverflow.com/questions/19103635/executing-commands-using-selenium-webdriver-in-node-javascript
@@ -73,19 +93,30 @@ async function playVideoWithDriver(driver, videoToWatch, positionInList) {
   return Promise.resolve(0);
 }
 
-async function playListOfVideosWithFirefox(videosToPlay) {
-  const driver = await firefoxDriver();
+async function playListOfVideosWithDriver(name, driverToUse, videosToPlay) {
+  try {
+    const driver = await driverToUse();
 
-  // videos.forEach(element => {
-  for (let i = 0; i < videosToPlay.length; i++) {
-    let video = videosToPlay[i];
-    console.log('Playing:', video.videoURL, video.videoLength);
-    // await playVideoWithDriver(driver, video).then(value =>
-    //   console.log('The value is ', value)
-    // );
-    await playVideoWithDriver(driver, video, i);
+    // videos.forEach(element => {
+    for (let i = 0; i < videosToPlay.length; i++) {
+      let video = videosToPlay[i];
+      infoLog(
+        `Using ${name}, playing ${video.videoURL} for ${video.videoLength}`
+      );
+
+      // await playVideoWithDriver(driver, video).then(value =>
+      //   console.log('The value is ', value)
+      // );
+      await playVideoWithDriver(driver, video, i);
+    }
+  } catch (error) {
+    errorLog(`Using ${name} got the following `, error);
+  } finally {
   }
 }
-playListOfVideosWithFirefox(videosToWatchWithFirefox);
+infoLog('Starting Up');
+playListOfVideosWithDriver('FireFox', firefoxDriver, videosToWatch);
+playListOfVideosWithDriver('Chrome', chromeDriver, videosToWatch);
+// playListOfVideosWithDriver('Safari', safariDriver, videosToWatch);
 
 console.log('DONE...');
