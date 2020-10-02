@@ -29,7 +29,7 @@ async function playLatestVideo(channelToWatch) {
   // let driver = await new Builder().forBrowser("chrome").build();
   try {
     await driver.get(channelToWatch);
-    await sleep(2000).then(() => console.log(new Date(), ' Loading Video...'));
+    await sleep(2000).then(() => infoLog('Loading Video...'));
     await driver
       .findElement(
         By.css(
@@ -37,7 +37,7 @@ async function playLatestVideo(channelToWatch) {
         )
       )
       .click();
-    await sleep(2000).then(() => console.log(new Date(), ' Loaded Video...'));
+    await sleep(2000).then(() => infoLog('Loaded Video...'));
 
     //https://stackoverflow.com/questions/39392479/how-to-mute-all-sounds-in-chrome-webdriver-with-selenium
     //https://stackoverflow.com/questions/19103635/executing-commands-using-selenium-webdriver-in-node-javascript
@@ -46,9 +46,7 @@ async function playLatestVideo(channelToWatch) {
 
     const video = await driver.findElement(By.css('body'));
     video.sendKeys('m');
-    await sleep(30000).then(() =>
-      console.log(new Date(), ' Sleeping for 30s...')
-    );
+    await sleep(30000).then(() => infoLog('Sleeping for 30s...'));
     video.sendKeys('>>>>');
     // pause and resume every 10% of total time
   } finally {
@@ -69,10 +67,6 @@ async function playVideoWithDriver(driver, videoToWatch, positionInList) {
     await driver.sleep(1000);
     infoLog('Sleep for 1s');
 
-    // await sleep(2000, 'Going to load the video').then(() =>
-    //   console.log(new Date(), ' Loading video...')
-    // );
-
     //https://stackoverflow.com/questions/39392479/how-to-mute-all-sounds-in-chrome-webdriver-with-selenium
     //https://stackoverflow.com/questions/19103635/executing-commands-using-selenium-webdriver-in-node-javascript
     //https://www.browserstack.com/docs/automate/selenium/getting-started/nodejs
@@ -82,9 +76,9 @@ async function playVideoWithDriver(driver, videoToWatch, positionInList) {
     if (positionInList === 0) video.sendKeys('m');
     // await sleep(30000).then(() => console.log('Waiting...'));
     // video.sendKeys('>>>>');
-    console.log('videoToWatch.videoLength:', videoToWatch.videoLength * 1000);
+    infoLog('videoToWatch.videoLength:', videoToWatch.videoLength * 1000);
     await sleep(videoToWatch.videoLength * 1000).then(() =>
-      console.log(new Date(), ' Going to next video')
+      infoLog('Going to next video')
     );
     // pause and resume every 10% of total time
   } finally {
@@ -114,9 +108,9 @@ async function playListOfVideosWithDriver(name, driverToUse, videosToPlay) {
   } finally {
   }
 }
+
 infoLog('Starting Up');
 playListOfVideosWithDriver('FireFox', firefoxDriver, videosToWatch);
 playListOfVideosWithDriver('Chrome', chromeDriver, videosToWatch);
 // playListOfVideosWithDriver('Safari', safariDriver, videosToWatch);
-
-console.log('DONE...');
+infoLog('Exitting');
