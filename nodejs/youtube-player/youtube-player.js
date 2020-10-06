@@ -107,6 +107,7 @@ async function playVideoWithDriver(name, driver, videoToWatch, positionInList) {
     let newCurrentVideoTime = await isVideoPlaying(driver);
     while (newCurrentVideoTime === currentVideoTime) {
       video.sendKeys(' ');
+      currentVideoTime = await isVideoPlaying(driver);
       await driver.sleep(1500);
       newCurrentVideoTime = await isVideoPlaying(driver);
       if (newCurrentVideoTime !== currentVideoTime)
