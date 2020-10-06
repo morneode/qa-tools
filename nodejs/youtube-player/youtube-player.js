@@ -186,7 +186,7 @@ async function playListOfVideosWithDriver(name, driverToUse, videosToPlay) {
       }
     } while (runForever);
   } catch (error) {
-    errorLog(`Using ${name} got the following `, error);
+    errorLog(`Using ${name} got the following ${error}`);
   } finally {
   }
 }
