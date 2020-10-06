@@ -7,6 +7,7 @@ const {
 } = require('../common/selenium');
 const { sleep } = require('../common/sleep');
 const { convertTimeToSeconds } = require('../common/time');
+const { infoLog, errorLog } = require('../common/logs');
 
 const videoAndLength = (videoURL, videoLengthInSeconds) => {
   return { videoURL: videoURL, videoLength: videoLengthInSeconds };
@@ -26,63 +27,6 @@ const videosToWatch = [
     convertTimeToSeconds('17:07')
   )
 ];
-
-const formatDate = () => {
-  let current_datetime = new Date();
-  let formatted_date =
-    current_datetime.getFullYear() +
-    '-' +
-    (current_datetime.getMonth() + 1) +
-    '-' +
-    current_datetime.getDate() +
-    ' ' +
-    current_datetime.getHours() +
-    ':' +
-    current_datetime.getMinutes() +
-    ':' +
-    current_datetime.getSeconds();
-  return formatted_date;
-};
-
-const infoLog = msg => {
-  console.log(`INFO: ${formatDate()} ${msg}`);
-};
-const errorLog = msg => {
-  console.error(`ERROR: ${formatDate()} ${msg}`);
-};
-
-async function playLatestVideo(channelToWatch) {
-  let driver = await firefoxDriver();
-  // let driver = await new Builder().forBrowser("chrome").build();
-  try {
-    await driver.get(channelToWatch);
-    await sleep(2000).then(() => infoLog('Loading Video...'));
-    await driver
-      .findElement(
-        By.css(
-          'ytd-grid-video-renderer.style-scope:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > h3:nth-child(1) > a:nth-child(2)'
-        )
-      )
-      .click();
-    await sleep(2000).then(() => infoLog('Loaded Video...'));
-
-    //https://stackoverflow.com/questions/39392479/how-to-mute-all-sounds-in-chrome-webdriver-with-selenium
-    //https://stackoverflow.com/questions/19103635/executing-commands-using-selenium-webdriver-in-node-javascript
-    //https://www.browserstack.com/docs/automate/selenium/getting-started/nodejs
-    //https://stackoverflow.com/questions/15596753/how-do-i-get-video-durations-with-youtube-api-version-3
-
-    const video = await driver.findElement(By.css('body'));
-    video.sendKeys('m');
-    await sleep(30000).then(() => infoLog('Sleeping for 30s...'));
-    video.sendKeys('>>>>');
-    // pause and resume every 10% of total time
-  } finally {
-    // await driver.quit().then(() => console.log('Closed webdriver'));
-  }
-}
-// playLatestVideo('https://www.youtube.com/c/LinusTechTips/videos');
-// playLatestVideo('https://www.youtube.com/c/jacksepticeye/videos');
-// playLatestVideo('https://www.youtube.com/user/enricood/videos');
 
 const getCurrentVideoLength = async driver => {
   let videoTimeInSeconds = 10;
@@ -130,17 +74,19 @@ async function playVideoWithDriver(name, driver, videoToWatch, positionInList) {
     while (currentVideoLength !== videoToWatch.videoLength) {
       if (countAdCheck % 10 === 0)
         infoLog(
-          `${name}: Ad is playing, ${currentVideoLength} vs ${videoToWatch.videoLength}`
+          `${name}: Ad is playing, ${videoToWatch.videoLength} vs ${currentVideoLength}`
         );
       countAdCheck++;
       await driver.sleep(1000);
       currentVideoLength = await getCurrentVideoLength(driver);
+      if (currentVideoLength === videoToWatch.videoLength)
+        infoLog('Time match.. Required video was launched');
     }
 
-    const timesToPause = 3;
-    // const videoLength =
-    // await sleep(30000).then(() => console.log('Waiting...'));
-    // video.sendKeys('>>>>');
+    const pauseTimeEveryXseconds = 10 * 60;
+    const timesToPause = Math.floor(
+      currentVideoLength / pauseTimeEveryXseconds
+    );
 
     // let videoTimeInSeconds = getCurrentVideoLength(driver);
     // const pauseResumeTime = Math.floor((videoTimeInSeconds * 1000) / 3);
@@ -176,7 +122,7 @@ async function playListOfVideosWithDriver(name, driverToUse, videosToPlay) {
     for (let i = 0; i < videosToPlay.length; i++) {
       let video = videosToPlay[i];
       infoLog(
-        `Using ${name}, playing ${video.videoURL} for ${video.videoLength}`
+        `Using ${name}, playing ${video.videoURL} for ${video.videoLength} seconds`
       );
 
       // await playVideoWithDriver(driver, video).then(value =>
