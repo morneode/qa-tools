@@ -8,6 +8,12 @@ const {
 const { sleep } = require('../common/sleep');
 const { convertTimeToSeconds } = require('../common/time');
 const { infoLog, errorLog } = require('../common/logs');
+const {
+  playVideoIfPaused,
+  waitTillAdIsDone,
+  checkStatusOfVideo,
+  videostatus
+} = require('./checkStatusOfVideo');
 
 const videoAndLength = (videoURL, videoLengthInSeconds) => {
   return { videoURL: videoURL, videoLength: videoLengthInSeconds };
@@ -38,27 +44,7 @@ for (i = 0; i < 10; i++) {
   );
 }
 
-const isVideoPlaying = async driver => {
-  let videoTimeInSeconds = 10;
-  try {
-    // const script = "alert('Alert via selenium')";
-    const script = `
-    // var videoLength = document.querySelector('.ytp-time-duration').innerHTML;
-    var videoLength = document.querySelector('.ytp-time-current').innerHTML;
-    //console.log(videoLength);
-    return videoLength`;
-    // `alert();
-    //   $('.ytp-time-duration').innerHTML;"`
-    videoTimeInSeconds = await driver
-      .executeScript(script)
-      .then(function(return_value) {
-        return convertTimeToSeconds(return_value);
-      });
-  } catch (error) {
-    errorLog('Could not run script', error);
-  }
-  return Promise.resolve(videoTimeInSeconds);
-};
+
 
 const getCurrentVideoLength = async driver => {
   let videoTimeInSeconds = 10;
@@ -102,32 +88,8 @@ async function playVideoWithDriver(name, driver, videoToWatch, positionInList) {
       // video.sendKeys(' ');
     }
 
-    let currentVideoTime = await isVideoPlaying(driver);
-    await driver.sleep(1500);
-    let newCurrentVideoTime = await isVideoPlaying(driver);
-    while (newCurrentVideoTime === currentVideoTime) {
-      video.sendKeys(' ');
-      currentVideoTime = await isVideoPlaying(driver);
-      await driver.sleep(1500);
-      newCurrentVideoTime = await isVideoPlaying(driver);
-      if (newCurrentVideoTime !== currentVideoTime)
-        infoLog(`Using ${name},Video is playing`);
-      else infoLog(`Using ${name}, video is paused`);
-    }
-
-    let countAdCheck = 0;
-    let currentVideoLength = await getCurrentVideoLength(driver);
-    while (!(Math.abs(currentVideoLength - videoToWatch.videoLength) <= 1)) {
-      if (countAdCheck % 10 === 0)
-        infoLog(
-          `${name}: Ad is playing, ${videoToWatch.videoLength} vs ${currentVideoLength}`
-        );
-      countAdCheck++;
-      await driver.sleep(1000);
-      currentVideoLength = await getCurrentVideoLength(driver);
-      if (Math.abs(currentVideoLength - videoToWatch.videoLength) <= 1)
-        infoLog(`Using ${name}, Time match.. Required video was launched`);
-    }
+    await playVideoIfPaused(name, driver);
+    await waitTillAdIsDone(name, videoToWatch, driver);
 
     const pauseTimeEveryXseconds = 10 * 60;
     const timesToPause = Math.floor(
@@ -194,10 +156,9 @@ async function playListOfVideosWithDriver(name, driverToUse, videosToPlay) {
 
 infoLog('Starting Up');
 playListOfVideosWithDriver('FireFox', firefoxDriver, videosToPromote);
-playListOfVideosWithDriver('Chrome', chromeDriver, videosToPromote);
-playListOfVideosWithDriver('FireFox', firefoxDriver, videosToPromote);
-playListOfVideosWithDriver('Chrome', chromeDriver, videosToPromote);
-playListOfVideosWithDriver('FireFox', firefoxDriver, videosToPromote);
-playListOfVideosWithDriver('Chrome', chromeDriver, videosToPromote);
+// playListOfVideosWithDriver('Chrome', chromeDriver, videosToPromote);
+// playListOfVideosWithDriver('FireFox', firefoxDriver, videosToPromote);
+// playListOfVideosWithDriver('Chrome', chromeDriver, videosToPromote);
+// playListOfVideosWithDriver('FireFox', firefoxDriver, videosToPromote);
+// playListOfVideosWithDriver('Chrome', chromeDriver, videosToPromote);
 // playListOfVideosWithDriver('Safari', safariDriver, videosToWatch);
-infoLog('Exitting');

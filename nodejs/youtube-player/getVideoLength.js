@@ -38,3 +38,25 @@ exports.getVideoLength = async videoToGetTheLength => {
   console.log(`returning ${videoTimeInSeconds}`);
   return Promise.resolve(videoTimeInSeconds);
 };
+
+exports.getVideoCurrentPosition = async driver => {
+  let videoTimeInSeconds = 10;
+  try {
+    // const script = "alert('Alert via selenium')";
+    const script = `
+    // var videoLength = document.querySelector('.ytp-time-duration').innerHTML;
+    var videoLength = document.querySelector('.ytp-time-current').innerHTML;
+    //console.log(videoLength);
+    return videoLength`;
+    // `alert();
+    //   $('.ytp-time-duration').innerHTML;"`
+    videoTimeInSeconds = await driver
+      .executeScript(script)
+      .then(function(return_value) {
+        return convertTimeToSeconds(return_value);
+      });
+  } catch (error) {
+    errorLog('Could not run script', error);
+  }
+  return Promise.resolve(videoTimeInSeconds);
+};
