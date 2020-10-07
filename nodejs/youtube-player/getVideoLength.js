@@ -1,3 +1,4 @@
+'use strict';
 const {
   By,
   firefoxDriver,
@@ -39,15 +40,35 @@ exports.getVideoLength = async videoToGetTheLength => {
   return Promise.resolve(videoTimeInSeconds);
 };
 
+exports.getVideoCurrentLength = async driver => {
+  let videoTimeInSeconds = 10;
+  try {
+    // const script = "alert('Alert via selenium')";
+    const script = `
+    //var videoLength = document.querySelector('.ytp-time-duration').innerHTML;
+    //console.log(videoLength);
+    return document.querySelector('.ytp-time-duration').innerHTML;`;
+    // `alert();
+    //   $('.ytp-time-duration').innerHTML;"`
+    videoTimeInSeconds = await driver
+      .executeScript(script)
+      .then(function(return_value) {
+        return convertTimeToSeconds(return_value);
+      });
+  } catch (error) {
+    errorLog('Could not run script', error);
+  }
+  return Promise.resolve(videoTimeInSeconds);
+};
+
 exports.getVideoCurrentPosition = async driver => {
   let videoTimeInSeconds = 10;
   try {
     // const script = "alert('Alert via selenium')";
     const script = `
-    // var videoLength = document.querySelector('.ytp-time-duration').innerHTML;
-    var videoLength = document.querySelector('.ytp-time-current').innerHTML;
-    //console.log(videoLength);
-    return videoLength`;
+    // var videoPosition = document.querySelector('.ytp-time-current').innerHTML;
+    // console.log(videoPosition);
+    return document.querySelector('.ytp-time-current').innerHTML;`;
     // `alert();
     //   $('.ytp-time-duration').innerHTML;"`
     videoTimeInSeconds = await driver

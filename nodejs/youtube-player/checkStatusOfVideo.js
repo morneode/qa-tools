@@ -1,5 +1,12 @@
+'use strict';
 const { infoLog, errorLog } = require('../common/logs');
-const { getVideoCurrentPosition, getVideoLength } = require('./getVideoLength');
+const {
+  getVideoCurrentPosition,
+  getVideoCurrentLength
+} = require('./getVideoLength');
+const { convertTimeToSeconds } = require('../common/time');
+const { sleep } = require('../common/sleep');
+
 exports.videostatus = {
   playing: 'playing',
   paused: 'paused'
@@ -7,38 +14,53 @@ exports.videostatus = {
 
 exports.checkStatusOfVideo = async driver => {
   const currentVideoTime = await getVideoCurrentPosition(driver);
-  await driver.sleep(1500);
+  await sleep(2000);
   const newCurrentVideoTime = await getVideoCurrentPosition(driver);
-  let result = '';
-  if (currentVideoTime === newCurrentVideoTime) result = videostatus.paused;
-  else result = videostatus.playing;
-  return result;
+
+  let result;
+  if (currentVideoTime === newCurrentVideoTime)
+    result = this.videostatus.paused;
+  else result = this.videostatus.playing;
+  infoLog(
+    `checkStatusOfVideo: ${result} ${currentVideoTime}vs${newCurrentVideoTime}`
+  );
+  return Promise.resolve(result);
 };
 
-exports.playVideoIfPaused = async (name, driver) => {
-  let videoStatus = await checkStatusOfVideo(driver);
-  while (videoStatus === videostatus.paused) {
+exports.playVideoIfPaused = async (name, video, driver) => {
+  let videoStatus = await this.checkStatusOfVideo(driver);
+  while (videoStatus !== this.videostatus.playing) {
+    // if (videoStatus !== this.videostatus.playing) {
+    infoLog(
+      `playVideoIfPaused:Using ${name}, the video was ${videoStatus}, ${videoStatus !==
+        this.videostatus.playing}`
+    );
     video.sendKeys(' ');
-    videoStatus = await checkStatusOfVideo(driver);
-    if (videoStatus === videostatus.playing)
-      infoLog(`Using ${name},Video is playing`);
-    else infoLog(`Using ${name}, video is paused`);
+
+    videoStatus = await this.checkStatusOfVideo(driver);
+    // infoLog(`Using ${name},video is ${videoStatus}`);
   }
+  infoLog(`playVideoIfPaused:Using ${name},video is ${videoStatus}`);
+  return Promise.resolve('');
 };
 
-exports.waitTillAdIsDone = async (name, videoToWatch, driver) => {
+exports.waitTillAdIsDone = async (name, video, videoToWatch, driver) => {
   let countAdCheck = 0;
-  let currentVideoLength = await getCurrentVideoLength(driver);
+  let currentVideoLength = await getVideoCurrentLength(driver);
   while (!(Math.abs(currentVideoLength - videoToWatch.videoLength) <= 1)) {
-    await playVideoIfPaused(driver);
-    if (countAdCheck % 10 === 0)
+    if (countAdCheck % 10 === 0) {
+      await this.playVideoIfPaused(name, video, driver);
       infoLog(
-        `${name}: Ad is playing, ${videoToWatch.videoLength} vs ${currentVideoLength}`
+        `waitTillAdIsDone: Using ${name}: Ad is playing, ${videoToWatch.videoLength} vs ${currentVideoLength}`
       );
+    }
     countAdCheck++;
-    await driver.sleep(1000);
-    currentVideoLength = await getCurrentVideoLength(driver);
+    await sleep(1500);
+    currentVideoLength = await getVideoCurrentLength(driver);
     if (Math.abs(currentVideoLength - videoToWatch.videoLength) <= 1)
-      infoLog(`Using ${name}, Time match.. Required video was launched`);
+      infoLog(
+        `waitTillAdIsDone: Using ${name}, Time match.. Required video was launched`
+      );
   }
+  return Promise.resolve('');
 };

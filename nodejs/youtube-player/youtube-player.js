@@ -1,3 +1,4 @@
+'use strict';
 const {
   By,
   firefoxDriver,
@@ -14,6 +15,10 @@ const {
   checkStatusOfVideo,
   videostatus
 } = require('./checkStatusOfVideo');
+const {
+  getVideoCurrentPosition,
+  getVideoCurrentLength
+} = require('./getVideoLength');
 
 const videoAndLength = (videoURL, videoLengthInSeconds) => {
   return { videoURL: videoURL, videoLength: videoLengthInSeconds };
@@ -35,7 +40,7 @@ const videosToWatch = [
 ];
 
 let videosToPromote = [];
-for (i = 0; i < 10; i++) {
+for (let i = 0; i < 10; i++) {
   videosToPromote.push(
     videoAndLength(
       'https://www.youtube.com/watch?v=OMeyncco4jQ',
@@ -43,29 +48,6 @@ for (i = 0; i < 10; i++) {
     )
   );
 }
-
-
-
-const getCurrentVideoLength = async driver => {
-  let videoTimeInSeconds = 10;
-  try {
-    // const script = "alert('Alert via selenium')";
-    const script = `
-    var videoLength = document.querySelector('.ytp-time-duration').innerHTML;
-    //console.log(videoLength);
-    return videoLength`;
-    // `alert();
-    //   $('.ytp-time-duration').innerHTML;"`
-    videoTimeInSeconds = await driver
-      .executeScript(script)
-      .then(function(return_value) {
-        return convertTimeToSeconds(return_value);
-      });
-  } catch (error) {
-    errorLog('Could not run script', error);
-  }
-  return Promise.resolve(videoTimeInSeconds);
-};
 
 async function playVideoWithDriver(name, driver, videoToWatch, positionInList) {
   try {
@@ -88,39 +70,49 @@ async function playVideoWithDriver(name, driver, videoToWatch, positionInList) {
       // video.sendKeys(' ');
     }
 
-    await playVideoIfPaused(name, driver);
-    await waitTillAdIsDone(name, videoToWatch, driver);
+    infoLog('##playVideoIfPaused');
+    await playVideoIfPaused(name, video, driver);
+    infoLog('##waitTillAdIsDone');
+    await waitTillAdIsDone(name, video, videoToWatch, driver);
 
-    const pauseTimeEveryXseconds = 10 * 60;
-    const timesToPause = Math.floor(
-      currentVideoLength / pauseTimeEveryXseconds
-    );
-
-    if (timesToPause < 1) {
-      infoLog(`sleeping until video is done`);
-      await sleep(videoToWatch.videoLength * 1000);
-      infoLog(`Finished playing the video`);
-    } else {
-      // let videoTimeInSeconds = getCurrentVideoLength(driver);
-      // const pauseResumeTime = Math.floor((videoTimeInSeconds * 1000) / 3);
-      // const pauseResumeTime = 40;
-      const pauseResumeTime = Math.floor(
-        videoToWatch.videoLength / timesToPause
-      );
-      infoLog(`Will pause/resume every ${pauseResumeTime}s`);
-      for (i = 0; i < timesToPause; i++) {
-        try {
-          await sleep(pauseResumeTime * 1000);
-          infoLog(`${name}: pausing`);
-          video.sendKeys(' ');
-          await driver.sleep(1000);
-          infoLog(`${name}: playing`);
-          video.sendKeys(' ');
-        } catch (error) {
-          errorLog(error);
-        }
-      }
+    //TODO: fix the final part of the script
+    let currentVideoLength = await getVideoCurrentLength(driver);
+    let currentVideoPosition = await getVideoCurrentPosition(driver);
+    while (currentVideoPosition < currentVideoLength) {
+      infoLog(`${name}, is playing the ${videoToWatch.videoURL}`);
+      await sleep(10000);
+      await playVideoIfPaused(name, video, driver);
+      await waitTillAdIsDone(name, video, videoToWatch, driver);
+      currentVideoPosition = await getVideoCurrentPosition(driver);
+      currentVideoLength = await getVideoCurrentLength(driver);
     }
+    // const pauseTimeEveryXseconds = 10 * 60;
+    // const timesToPause = Math.floor(
+    //   currentVideoLength / pauseTimeEveryXseconds
+    // );
+
+    // if (timesToPause < 1) {
+    //   infoLog(`sleeping until video is done`);
+    //   await sleep(videoToWatch.videoLength * 1000);
+    //   infoLog(`Finished playing the video`);
+    // } else {
+    //   const pauseResumeTime = Math.floor(
+    //     videoToWatch.videoLength / timesToPause
+    //   );
+    //   infoLog(`Will pause/resume every ${pauseResumeTime}s`);
+    //   for (i = 0; i < timesToPause; i++) {
+    //     try {
+    //       await sleep(pauseResumeTime * 1000);
+    //       infoLog(`${name}: pausing`);
+    //       video.sendKeys(' ');
+    //       await driver.sleep(1000);
+    //       infoLog(`${name}: playing`);
+    //       video.sendKeys(' ');
+    //     } catch (error) {
+    //       errorLog(error);
+    //     }
+    //   }
+    // }
 
     infoLog('Going to next video');
     // pause and resume every 10% of total time
