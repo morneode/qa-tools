@@ -12,7 +12,15 @@ exports.videostatus = {
   paused: 'paused'
 };
 
-exports.checkStatusOfVideo = async driver => {
+exports.videoPlayPause = async video => {
+  video.sendKeys(' ');
+  sleep(300);
+  video.sendKeys(' ');
+  return Promise.resolve('');
+};
+
+exports.checkStatusOfVideo = async (driver, video) => {
+  await this.videoPlayPause(video);
   const currentVideoTime = await getVideoCurrentPosition(driver);
   await sleep(2000);
   const newCurrentVideoTime = await getVideoCurrentPosition(driver);
@@ -28,7 +36,8 @@ exports.checkStatusOfVideo = async driver => {
 };
 
 exports.playVideoIfPaused = async (name, video, driver) => {
-  let videoStatus = await this.checkStatusOfVideo(driver);
+  let videoStatus = await this.checkStatusOfVideo(driver, video);
+
   while (videoStatus !== this.videostatus.playing) {
     // if (videoStatus !== this.videostatus.playing) {
     infoLog(
@@ -36,8 +45,7 @@ exports.playVideoIfPaused = async (name, video, driver) => {
         this.videostatus.playing}`
     );
     video.sendKeys(' ');
-
-    videoStatus = await this.checkStatusOfVideo(driver);
+    videoStatus = await this.checkStatusOfVideo(driver, video);
     // infoLog(`Using ${name},video is ${videoStatus}`);
   }
   infoLog(`playVideoIfPaused:Using ${name},video is ${videoStatus}`);

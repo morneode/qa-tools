@@ -6,8 +6,8 @@ const {
   safariDriver,
   until
 } = require('../common/selenium');
+const { infoLog, errorLog } = require('../common/logs');
 const { sleep } = require('../common/sleep');
-
 const { convertTimeToSeconds } = require('../common/time');
 
 exports.getVideoLength = async videoToGetTheLength => {

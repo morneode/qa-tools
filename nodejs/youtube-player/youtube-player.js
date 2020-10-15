@@ -12,6 +12,7 @@ const { infoLog, errorLog } = require('../common/logs');
 const {
   playVideoIfPaused,
   waitTillAdIsDone,
+  videoPlayPause,
   checkStatusOfVideo,
   videostatus
 } = require('./checkStatusOfVideo');
@@ -67,7 +68,6 @@ async function playVideoWithDriver(name, driver, videoToWatch, positionInList) {
     let video = await driver.findElement(By.css('body'));
     if (positionInList === 0) {
       video.sendKeys('m');
-      // video.sendKeys(' ');
     }
 
     infoLog('##playVideoIfPaused');
@@ -76,43 +76,18 @@ async function playVideoWithDriver(name, driver, videoToWatch, positionInList) {
     await waitTillAdIsDone(name, video, videoToWatch, driver);
 
     //TODO: fix the final part of the script
+    videoPlayPause(video);
     let currentVideoLength = await getVideoCurrentLength(driver);
     let currentVideoPosition = await getVideoCurrentPosition(driver);
-    while (currentVideoPosition < currentVideoLength) {
+    while (currentVideoPosition < currentVideoLength - 10) {
       infoLog(`${name}, is playing the ${videoToWatch.videoURL}`);
       await sleep(10000);
       await playVideoIfPaused(name, video, driver);
       await waitTillAdIsDone(name, video, videoToWatch, driver);
+      videoPlayPause(video);
       currentVideoPosition = await getVideoCurrentPosition(driver);
       currentVideoLength = await getVideoCurrentLength(driver);
     }
-    // const pauseTimeEveryXseconds = 10 * 60;
-    // const timesToPause = Math.floor(
-    //   currentVideoLength / pauseTimeEveryXseconds
-    // );
-
-    // if (timesToPause < 1) {
-    //   infoLog(`sleeping until video is done`);
-    //   await sleep(videoToWatch.videoLength * 1000);
-    //   infoLog(`Finished playing the video`);
-    // } else {
-    //   const pauseResumeTime = Math.floor(
-    //     videoToWatch.videoLength / timesToPause
-    //   );
-    //   infoLog(`Will pause/resume every ${pauseResumeTime}s`);
-    //   for (i = 0; i < timesToPause; i++) {
-    //     try {
-    //       await sleep(pauseResumeTime * 1000);
-    //       infoLog(`${name}: pausing`);
-    //       video.sendKeys(' ');
-    //       await driver.sleep(1000);
-    //       infoLog(`${name}: playing`);
-    //       video.sendKeys(' ');
-    //     } catch (error) {
-    //       errorLog(error);
-    //     }
-    //   }
-    // }
 
     infoLog('Going to next video');
     // pause and resume every 10% of total time
@@ -133,10 +108,6 @@ async function playListOfVideosWithDriver(name, driverToUse, videosToPlay) {
         infoLog(
           `Using ${name}, playing ${video.videoURL} for ${video.videoLength} seconds`
         );
-
-        // await playVideoWithDriver(driver, video).then(value =>
-        //   console.log('The value is ', value)
-        // );
         await playVideoWithDriver(name, driver, video, i);
       }
     } while (runForever);
@@ -148,9 +119,5 @@ async function playListOfVideosWithDriver(name, driverToUse, videosToPlay) {
 
 infoLog('Starting Up');
 playListOfVideosWithDriver('FireFox', firefoxDriver, videosToPromote);
-// playListOfVideosWithDriver('Chrome', chromeDriver, videosToPromote);
-// playListOfVideosWithDriver('FireFox', firefoxDriver, videosToPromote);
-// playListOfVideosWithDriver('Chrome', chromeDriver, videosToPromote);
-// playListOfVideosWithDriver('FireFox', firefoxDriver, videosToPromote);
 // playListOfVideosWithDriver('Chrome', chromeDriver, videosToPromote);
 // playListOfVideosWithDriver('Safari', safariDriver, videosToWatch);
