@@ -41,11 +41,18 @@ const videosToWatch = [
 ];
 
 let videosToPromote = [];
+let otherVideoToWatch = [];
 for (let i = 0; i < 10; i++) {
   videosToPromote.push(
     videoAndLength(
       'https://www.youtube.com/watch?v=OMeyncco4jQ',
       convertTimeToSeconds('6:52')
+    )
+  );
+  otherVideoToWatch.push(
+    videoAndLength(
+      'https://www.youtube.com/watch?v=FzlxoVc3QVU',
+      convertTimeToSeconds('50:46')
     )
   );
 }
@@ -114,10 +121,13 @@ async function playListOfVideosWithDriver(name, driverToUse, videosToPlay) {
   } catch (error) {
     errorLog(`Using ${name} got the following ${error}`);
   } finally {
+    await driver.quit().then(() => infoLog(`Closed ${name}`));
   }
+  infoLog(`Using ${name}, finished playing all videos`);
 }
 
 infoLog('Starting Up');
-playListOfVideosWithDriver('FireFox', firefoxDriver, videosToPromote);
+playListOfVideosWithDriver('FireFox1', firefoxDriver, videosToPromote);
+playListOfVideosWithDriver('FireFox2', firefoxDriver, otherVideoToWatch);
 // playListOfVideosWithDriver('Chrome', chromeDriver, videosToPromote);
 // playListOfVideosWithDriver('Safari', safariDriver, videosToWatch);
