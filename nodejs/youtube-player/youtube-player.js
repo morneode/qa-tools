@@ -193,11 +193,11 @@ async function playListOfVideosWithDriver(name, driverToUse, videosToPlay) {
 }
 
 infoLog('Starting Up');
-playListOfVideosWithDriver('FireFox', firefoxDriver, videosToPromote);
+// playListOfVideosWithDriver('FireFox', firefoxDriver, videosToPromote);
 playListOfVideosWithDriver('Chrome', chromeDriver, videosToPromote);
-playListOfVideosWithDriver('FireFox', firefoxDriver, videosToPromote);
+// playListOfVideosWithDriver('FireFox', firefoxDriver, videosToPromote);
 playListOfVideosWithDriver('Chrome', chromeDriver, videosToPromote);
-playListOfVideosWithDriver('FireFox', firefoxDriver, videosToPromote);
+// playListOfVideosWithDriver('FireFox', firefoxDriver, videosToPromote);
 playListOfVideosWithDriver('Chrome', chromeDriver, videosToPromote);
 // playListOfVideosWithDriver('Safari', safariDriver, videosToWatch);
 infoLog('Exitting');
