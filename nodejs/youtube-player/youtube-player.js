@@ -1,3 +1,4 @@
+'use strict';
 const {
   By,
   firefoxDriver,
@@ -8,6 +9,17 @@ const {
 const { sleep } = require('../common/sleep');
 const { convertTimeToSeconds } = require('../common/time');
 const { infoLog, errorLog } = require('../common/logs');
+const {
+  playVideoIfPaused,
+  waitTillAdIsDone,
+  videoPlayPause,
+  checkStatusOfVideo,
+  videostatus
+} = require('./checkStatusOfVideo');
+const {
+  getVideoCurrentPosition,
+  getVideoCurrentLength
+} = require('./getVideoLength');
 
 const videoAndLength = (videoURL, videoLengthInSeconds) => {
   return { videoURL: videoURL, videoLength: videoLengthInSeconds };
@@ -189,7 +201,9 @@ async function playListOfVideosWithDriver(name, driverToUse, videosToPlay) {
   } catch (error) {
     errorLog(`Using ${name} got the following ${error}`);
   } finally {
+    await driver.quit().then(() => infoLog(`Closed ${name}`));
   }
+  infoLog(`Using ${name}, finished playing all videos`);
 }
 
 infoLog('Starting Up');
@@ -200,4 +214,3 @@ playListOfVideosWithDriver('Chrome', chromeDriver, videosToPromote);
 // playListOfVideosWithDriver('FireFox', firefoxDriver, videosToPromote);
 playListOfVideosWithDriver('Chrome', chromeDriver, videosToPromote);
 // playListOfVideosWithDriver('Safari', safariDriver, videosToWatch);
-infoLog('Exitting');
